@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Special Memories</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Inter:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles & Animations */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes kenBurns {
+            0% { transform: scale(1.1) translate(0, 0); opacity: 0.5; }
+            50% { transform: scale(1.15) translate(2%, -2%); opacity: 0.6; }
+            100% { transform: scale(1.1) translate(0, 0); opacity: 0.5; }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); } 20%, 40%, 60%, 80% { transform: translateX(6px); } }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Animated Gradient Background - More colors */
+            background: linear-gradient(135deg, #fde6f3, #fbcfe8, #f9a8d4, #f472b6, #d8b4fe, #facc15); /* Added purple, gold */
+            background-size: 400% 400%; /* Larger size for smoother multi-color animation */
+            animation: gradientShift 20s ease infinite; /* Slower animation */
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 8rem;
+            padding-bottom: 4rem;
+            overflow-x: hidden;
+            position: relative; /* Needed for pseudo-element */
+        }
+        html, body { height: 100%; }
+
+        /* Login Background Image - Applied via pseudo-element */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0; /* Cover entire viewport */
+            background-image: url('/assets//8.jpeg'); /* --- REPLACE THIS URL --- */
+            background-size: cover;
+            background-position: center center;
+            background-blend-mode: overlay; /* Blend image with gradient */
+            opacity: 0; /* Hidden by default */
+            z-index: -1; /* Behind everything */
+            transition: opacity 1s ease-in-out;
+            will-change: transform, opacity; /* Optimize animation */
+        }
+        body.login-active::before {
+            opacity: 0.5; /* Make visible when login is active */
+            animation: kenBurns 30s ease-in-out infinite; /* Apply Ken Burns effect */
+        }
+
+        .quote-background {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.7rem; /* Slightly larger */
+            color: rgba(134, 25, 143, 0.8); /* Darker purple/pink */
+            text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.5); /* Subtle text shadow */
+            text-align: center;
+            z-index: 10;
+            max-width: 90%;
+            padding: 0 1rem;
+            transition: opacity 0.7s ease-in-out;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        /* Base container style */
+        .page-container {
+            background-color: rgba(255, 255, 255, 0.92); /* Even more opaque */
+            backdrop-filter: blur(16px); /* Increased blur */
+            border-radius: 1.75rem; /* More rounded */
+            padding: 3rem; /* More padding */
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12), 0 8px 18px rgba(0,0,0,0.08); /* Refined shadow */
+            width: 90%;
+            z-index: 1;
+            position: relative;
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+            opacity: 1;
+        }
+        .page-container.hidden { opacity: 0; pointer-events: none; }
+        #loginContainer { max-width: 450px; }
+        #memoriesContainer {
+            max-width: 1200px; /* Wider for masonry */
+            max-height: calc(100vh - 12rem);
+            overflow-y: auto;
+            display: none;
+        }
+
+        /* Input field styling */
+        input[type="text"], input[type="password"] {
+            border: 1px solid #fce7f3; /* Very light pink border */
+            border-radius: 0.85rem;
+            padding: 1rem 1.3rem;
+            width: 100%;
+            margin-top: 0.6rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.8);
+            font-size: 1rem;
+        }
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: #f472b6; /* Brighter pink */
+            box-shadow: 0 0 0 4px rgba(244, 114, 182, 0.3);
+        }
+
+        /* Button styling */
+        button {
+            /* Multi-color gradient */
+            background-image: linear-gradient(to right, #ec4899, #f472b6, #d8b4fe);
+            color: white;
+            font-weight: bold;
+            padding: 1rem 2rem;
+            border-radius: 0.85rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.35s ease;
+            width: 100%;
+            margin-top: 1.75rem;
+            box-shadow: 0 6px 18px rgba(219, 39, 119, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-size: 0.9rem;
+            min-height: 45px;
+        }
+        button:hover {
+            background-image: linear-gradient(to right, #db2777, #ec4899, #c084fc); /* Darker */
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 0 10px 25px rgba(190, 24, 93, 0.4);
+        }
+        button:active { transform: translateY(-1px) scale(1); box-shadow: 0 6px 18px rgba(219, 39, 119, 0.3); }
+
+        /* Logout button */
+        #logoutButton {
+             background-image: linear-gradient(to right, #fbcfe8, #fce7f3);
+             color: #a21caf; /* Purple text */
+             width: auto; position: absolute; top: 1.75rem; right: 1.75rem;
+             padding: 0.7rem 1.4rem; margin-top: 0;
+             box-shadow: 0 4px 12px rgba(244, 114, 182, 0.25);
+             text-transform: none; letter-spacing: 0;
+        }
+         #logoutButton:hover {
+             background-image: linear-gradient(to right, #f9a8d4, #fbcfe8);
+             color: #86198f;
+             box-shadow: 0 6px 18px rgba(236, 72, 153, 0.35);
+         }
+
+        /* Modern Masonry Gallery (using column-count) */
+        .gallery {
+            margin-top: 2.5rem;
+            column-count: 4; /* Default columns */
+            column-gap: 1.25rem; /* Gap between columns */
+        }
+        .gallery-item {
+            margin-bottom: 1.25rem; /* Space below each item */
+            break-inside: avoid; /* Prevent items from breaking across columns */
+            position: relative; /* For potential overlay effects */
+            overflow: hidden; /* Contain hover effects */
+            border-radius: 1rem; /* Rounded corners for the container */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+            opacity: 0; /* Start hidden for animation */
+            /* Animation applied via JS */
+        }
+         .gallery-item:hover {
+             transform: scale(1.05); /* Slightly larger scale */
+             box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
+         }
+
+        .gallery img, .gallery video {
+            display: block; /* Remove extra space below image */
+            width: 100%;
+            height: auto; /* Allow images to have natural height */
+            border-radius: 1rem; /* Match container */
+            transition: transform 0.4s ease; /* Smooth zoom inside container */
+        }
+         .gallery-item:hover img,
+         .gallery-item:hover video:not(:focus-within) {
+             transform: scale(1.1); /* Zoom image inside container on hover */
+         }
+        /* Responsive Columns */
+        @media (max-width: 1024px) { .gallery { column-count: 3; } }
+        @media (max-width: 768px) { .gallery { column-count: 2; } }
+        @media (max-width: 480px) { .gallery { column-count: 1; } }
+
+
+         /* Error message */
+         #errorMessage {
+            color: #b91c1c; font-size: 0.9rem; margin-top: 1rem; text-align: center;
+            opacity: 0; transition: opacity 0.3s ease-in-out; display: none;
+         }
+         #errorMessage.show { display: block; opacity: 1; }
+
+         /* Confetti Canvas */
+         #confettiCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+
+         /* Image Modal */
+         #imageModal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.92); /* Darker */
+            display: flex; justify-content: center; align-items: center;
+            z-index: 999; opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease-in-out; padding: 1rem;
+         }
+         #imageModal.show { opacity: 1; pointer-events: auto; }
+         #modalImage {
+            max-width: 90%; max-height: 85%; object-fit: contain; border-radius: 0.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transform: scale(0.8) rotate(-2deg); /* Start smaller and slightly rotated */
+            transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28); /* Bouncier */
+         }
+          #imageModal.show #modalImage { transform: scale(1) rotate(0deg); /* Scale and un-rotate */ }
+         #closeModal {
+            position: absolute; top: 1.5rem; right: 1.5rem; font-size: 3rem; /* Larger */
+            color: #ccc; background: none; border: none; cursor: pointer;
+            line-height: 1; padding: 0.5rem; width: auto; margin-top: 0; box-shadow: none;
+            transition: color 0.3s ease, transform 0.4s ease;
+         }
+         #closeModal:hover { color: #fff; transform: rotate(180deg) scale(1.1); }
+
+         /* Login Elements Animation */
+        .login-element { opacity: 0; animation: fadeInUp 0.7s ease-out forwards; }
+        .animate-shake { animation: shake 0.5s ease-in-out; }
+    </style>
+</head>
+<body>
+    <div id="quoteDisplay" class="quote-background">"Memory is the diary we all carry about with us." - Oscar Wilde</div>
+
+    <div id="loginContainer" class="page-container">
+        <h1 class="text-3xl font-bold text-center text-pink-600 mb-6 login-element" style="font-family: 'Dancing Script', cursive; animation-delay: 0.1s;">Welcome Back</h1>
+        <form id="loginForm">
+            <div class="mb-4 login-element" style="animation-delay: 0.2s;">
+                <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="mb-6 login-element" style="animation-delay: 0.3s;">
+                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="login-element" style="animation-delay: 0.4s;">Login</button>
+            <p id="errorMessage">Invalid username or password.</p>
+        </form>
+    </div>
+
+    <div id="memoriesContainer" class="page-container">
+         <button id="logoutButton">Logout</button>
+        <h1 class="text-4xl font-bold text-center text-purple-600 mb-4" style="font-family: 'Playfair Display', serif;">Our Cherished Moments</h1>
+        <p class="text-center text-gray-600 mb-8 italic">let's create countless memories.</p>
+
+        <div class="gallery">
+            <div class="gallery-item"><img src="/assets/1.jpeg" alt="Memory Pic 1"></div>
+            <div class="gallery-item"><img src="/assets/2.jpeg" alt="Memory Pic 2"></div>
+            <div class="gallery-item"><img src="/assets/3.jpeg" alt="Memory Pic 3"></div>
+            <div class="gallery-item"><img src="/assets/4.jpeg" alt="Memory Pic 4"></div>
+            <div class="gallery-item"><img src="/assets/5.jpeg" alt="Memory Pic 5"></div>
+            <div class="gallery-item"><img src="/assets/6.jpeg" alt="Memory Pic 6"></div>
+            <div class="gallery-item"><img src="/assets/7.jpeg" alt="Memory Pic 7"></div>
+            <div class="gallery-item"><img src="/assets/9.jpeg" alt="Memory Pic 8"></div>
+            <div class="gallery-item"><img src="/assets/10.jpeg" alt="Memory Pic 9"></div>
+            <div class="gallery-item"><img src="/assets/12.jpeg" alt="Memory Pic 10"></div>
+            <div class="gallery-item"><img src="/assets/13.jpeg" alt="Memory Pic 11"></div>
+            <div class="gallery-item"><img src="/assets/14.jpeg" alt="Memory Pic 12"></div>
+            <div class="gallery-item"><img src="/assets/15.jpeg" alt="Memory Pic 13"></div>
+            <div class="gallery-item"><img src="/assets/16.jpeg" alt="Memory Pic 14"></div>
+            <div class="gallery-item"><img src="/assets/17.jpeg" alt="Memory Pic 15"></div>
+            <div class="gallery-item"><img src="/assets/18.jpeg" alt="Memory Pic 16"></div>
+
+            <div class="gallery-item">
+                <video controls>
+                    <source src="/assets/19.mp4" type="video/mp4"> Your browser does not support the video tag. (Vid 1)
+                </video>
+            </div>
+             <div class="gallery-item">
+                <video controls>
+                    <source src="/assets/20.mp4" type="video/mp4"> Your browser does not support the video tag. (Vid 2)
+                </video>
+            </div>
+             <div class="gallery-item">
+                <video controls>
+                    <source src="/assets/21.mp4" type="video/mp4"> Your browser does not support the video tag. (Vid 3)
+                </video>
+            </div>
+             <div class="gallery-item">
+                <video controls>
+                    <source src="/assets/23.mp4" type="video/mp4"> Your browser does not support the video tag. (Vid 4)
+                </video>
+            </div>
+             <div class="gallery-item">
+                <video controls>
+                    <source src="/assets/24.mp4" type="video/mp4"> Your browser does not support the video tag. (Vid 5)
+                </video>
+            </div>
+        </div>
+    </div>
+
+    <div id="imageModal">
+        <button id="closeModal">&times;</button>
+        <img src="" alt="Enlarged Memory" id="modalImage">
+    </div>
+
+    <canvas id="confettiCanvas"></canvas>
+
+    <script>
+        // --- DOM Elements ---
+        const loginContainer = document.getElementById('loginContainer');
+        const memoriesContainer = document.getElementById('memoriesContainer');
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const errorMessage = document.getElementById('errorMessage');
+        const logoutButton = document.getElementById('logoutButton');
+        const quoteDisplay = document.getElementById('quoteDisplay');
+        const confettiCanvas = document.getElementById('confettiCanvas');
+        const gallery = memoriesContainer.querySelector('.gallery');
+        const imageModal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const closeModalButton = document.getElementById('closeModal');
+
+        // --- Quotes ---
+        const quotes = [
+            "In dreams and in love there are no impossibilities. - Janos Arnay", "Love doesn't make the world go 'round. Love is what makes the ride worthwhile. - Franklin P. Jones",
+            "The best thing to hold onto in life is each other. - Audrey Hepburn", "We loved with a love that was more than love. - Edgar Allan Poe",
+            "Memory is the diary we all carry about with us. - Oscar Wilde", "Sometimes the smallest things take up the most room in your heart. - A.A. Milne",
+            "Grow old along with me; the best is yet to be. - Robert Browning", "Where there is love there is life. - Mahatma Gandhi",
+            "Journeys are best measured in friends, rather than miles. - Tim Cahill", "A moment lasts all of a second, but the memory lives on forever."
+        ];
+        let currentQuoteIndex = Math.floor(Math.random() * quotes.length);
+        let quoteInterval;
+
+        // --- Confetti Function ---
+        const myConfetti = confetti.create(confettiCanvas, { resize: true, useWorker: true });
+        const confettiColors = ['#fbcfe8', '#f9a8d4', '#f472b6', '#ec4899', '#db2777', '#ffffff', '#e9d5ff', '#c084fc', '#fde047', '#facc15']; // Added purple/gold shades
+
+        function triggerConfetti() {
+             function fire(particleRatio, opts) {
+                 myConfetti(Object.assign({}, { origin: { y: 0.55 }, colors: confettiColors }, opts, {
+                     particleCount: Math.floor(300 * particleRatio) // Even more particles
+                 }));
+             }
+             // More varied burst
+             fire(0.25, { spread: 40, startVelocity: 65, });
+             fire(0.2, { spread: 80, startVelocity: 50 });
+             fire(0.35, { spread: 120, decay: 0.9, scalar: 0.9 });
+             fire(0.1, { spread: 150, startVelocity: 30, decay: 0.92, scalar: 1.2 });
+             fire(0.1, { spread: 180, startVelocity: 55 });
+        }
+
+        // --- Quote Rotation ---
+        function rotateQuote() {
+            currentQuoteIndex = (currentQuoteIndex + 1) % quotes.length;
+            quoteDisplay.style.opacity = 0;
+            setTimeout(() => {
+                quoteDisplay.textContent = `"${quotes[currentQuoteIndex]}"`;
+                quoteDisplay.style.opacity = 1;
+            }, 700);
+        }
+        function startQuoteRotation() {
+            clearInterval(quoteInterval);
+            quoteDisplay.textContent = `"${quotes[currentQuoteIndex]}"`;
+            quoteDisplay.style.opacity = 1;
+            quoteInterval = setInterval(rotateQuote, 10000);
+        }
+        function stopQuoteRotation() {
+             clearInterval(quoteInterval);
+             quoteDisplay.style.opacity = 0;
+        }
+
+        // --- Page Transition Logic ---
+        const transitionDuration = 600; // Match CSS transition duration
+
+        function fadeOut(element, callback) {
+            element.classList.add('hidden');
+            setTimeout(() => {
+                element.style.display = 'none';
+                if (callback) callback();
+            }, transitionDuration);
+        }
+        function fadeIn(element) {
+            element.style.display = 'block';
+            setTimeout(() => { element.classList.remove('hidden'); }, 20);
+        }
+
+        // --- Login/Logout View Management ---
+        function showLoginPage() {
+            fadeOut(memoriesContainer, () => {
+                fadeIn(loginContainer);
+                startQuoteRotation();
+                document.body.classList.add('login-active'); // Activate background image
+                localStorage.removeItem('loggedIn');
+                usernameInput.value = ''; passwordInput.value = '';
+                errorMessage.classList.remove('show');
+            });
+        }
+        function showMemoriesPage() {
+            fadeOut(loginContainer, () => {
+                document.body.classList.remove('login-active'); // Deactivate background image
+                fadeIn(memoriesContainer);
+                startQuoteRotation();
+                localStorage.setItem('loggedIn', 'true');
+                setTimeout(triggerConfetti, 400); // Slightly longer delay
+
+                // Trigger gallery item animations
+                const galleryItems = gallery.querySelectorAll('.gallery-item');
+                galleryItems.forEach((item, index) => {
+                    item.style.opacity = '0'; item.style.animation = 'none';
+                    void item.offsetWidth; // Force reflow
+                    item.style.animation = `fadeInUp 0.7s ease-out ${index * 0.06}s forwards`; // Faster stagger
+                });
+            });
+        }
+
+        // --- Event Listeners ---
+        loginForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            if (usernameInput.value === 'Thilaka' && passwordInput.value === 'Thilaka') {
+                errorMessage.classList.remove('show');
+                showMemoriesPage();
+            } else {
+                errorMessage.classList.add('show');
+                loginContainer.classList.add('animate-shake');
+                setTimeout(() => { loginContainer.classList.remove('animate-shake'); }, 500);
+            }
+        });
+        logoutButton.addEventListener('click', showLoginPage);
+
+        // --- Image Modal Logic ---
+        function openModal(src) { modalImage.src = src; imageModal.classList.add('show'); }
+        function closeModal() {
+            imageModal.classList.remove('show');
+            setTimeout(() => { if (!imageModal.classList.contains('show')) modalImage.src = ""; }, 400);
+        }
+        // Use event delegation on the gallery container
+        gallery.addEventListener('click', (event) => {
+            // Find the closest ancestor gallery-item, then find the img inside it
+            const item = event.target.closest('.gallery-item');
+            if (item) {
+                const img = item.querySelector('img');
+                if (img) { // Only open modal for images
+                    openModal(img.src);
+                }
+            }
+        });
+        closeModalButton.addEventListener('click', closeModal);
+        imageModal.addEventListener('click', (event) => { if (event.target === imageModal) closeModal(); });
+        document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && imageModal.classList.contains('show')) closeModal(); });
+
+        // --- Initial Page Load ---
+        loginContainer.style.display = 'none'; memoriesContainer.style.display = 'none';
+        loginContainer.classList.add('hidden'); memoriesContainer.classList.add('hidden');
+
+        setTimeout(() => {
+            if (localStorage.getItem('loggedIn') === 'true') {
+                 document.body.classList.remove('login-active'); // Ensure BG image is off
+                 fadeIn(memoriesContainer);
+                 startQuoteRotation();
+                 const galleryItems = gallery.querySelectorAll('.gallery-item');
+                 galleryItems.forEach((item, index) => {
+                     item.style.animation = `fadeInUp 0.7s ease-out ${index * 0.06}s forwards`;
+                 });
+            } else {
+                document.body.classList.add('login-active'); // Ensure BG image is on
+                fadeIn(loginContainer);
+                startQuoteRotation();
+            }
+        }, 50);
+
+    </script>
+</body>
+</html>
